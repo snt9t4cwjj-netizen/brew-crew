@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Brew Crew</title>
+<style>
+:root{--bg:#faf6ef;--card:#fff;--ink:#2b2118;--mute:#7a6a5a;--line:#e6dccb;--amber:#c97a14;--amber-ink:#fff;--ok:#2f7d4f;--okbg:#e3f3ea;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#1c1611;--card:#271f18;--ink:#f3e9dc;--mute:#b4a390;--line:#3a2f25;--amber:#e39a35;--amber-ink:#1c1611;--ok:#6fd09a;--okbg:#1f3a2b;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px}
+h1{font-size:24px;margin:4px 0 12px}
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tabs button{flex:1;padding:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;font:inherit;font-weight:600}
+.tabs button.on{background:var(--amber);color:var(--amber-ink);border-color:var(--amber)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.between{justify-content:space-between}
+input,select,textarea{width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.full{grid-column:1/-1}
+.btn{padding:10px 14px;border:0;border-radius:10px;background:var(--amber);color:var(--amber-ink);font:inherit;font-weight:600}
+.ghost{background:transparent;color:var(--mute);border:1px solid var(--line);padding:6px 10px;border-radius:8px;font:inherit;font-size:14px}
+.mute{color:var(--mute);font-size:14px}
+.pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600;background:var(--line);color:var(--ink)}
+.best{background:var(--okbg);color:var(--ok)}
+.stars button{background:none;border:0;font-size:22px;padding:0 2px;color:var(--line)}
+.stars button.on{color:var(--amber)}
+.yes{background:var(--ok);color:var(--card)}
+details summary{cursor:pointer;font-weight:600;padding:4px 0}
+.bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin:8px 0 2px}.bar i{display:block;height:100%;background:var(--amber)}
+.hide{display:none}
+</style>
+</head>
+<body>
+<main>
+<h1>🍺 Brew Crew</h1>
+
+<section id="setup" class="hide card">
+<strong>One-time setup</strong>
+<p class="mute">Paste the Firebase config from your project (the part that looks like <code>apiKey: "…", projectId: "…"</code>). You’ll then get an invite link for your friends.</p>
+<textarea id="cfgText" rows="8" placeholder="const firebaseConfig = { apiKey: ..., projectId: ..., appId: ... };"></textarea>
+<div style="margin-top:8px"><button class="btn" id="cfgSave">Connect</button></div>
+<div id="cfgErr" class="mute"></div>
+</section>
+
+<section id="who" class="hide card">
+<strong>Who are you?</strong>
+<p class="mute">Enter your first name. Ratings and availability are saved under it.</p>
+<div class="row"><input id="nameIn" placeholder="Your name" style="flex:1"><button class="btn" id="nameSave">Go</button></div>
+</section>
+
+<div id="app" class="hide">
+<div class="tabs"><button id="t1" class="on">Beers</button><button id="t2">Brew days</button></div>
+<div id="msg" class="mute"></div>
+
+<section id="beers">
+<div class="card"><details><summary>+ Add a beer</summary>
+<div class="grid" style="margin-top:8px">
+<input id="bn" class="full" placeholder="Beer name">
+<input id="bs" placeholder="Style (IPA, stout…)">
+<input id="bd" type="date" aria-label="Brew date">
+<input id="ba" type="number" step="0.1" placeholder="ABV %">
+<select id="bt"><option>Fermenting</option><option>Conditioning</option><option>Ready</option><option>Finished</option></select>
+<input id="bf" type="number" placeholder="Ferment days">
+<input id="og" type="number" step="0.001" placeholder="OG (1.050)">
+<input id="fg" type="number" step="0.001" placeholder="FG (1.010)">
+<textarea id="bi" class="full" rows="3" placeholder="Ingredients (grains, hops, yeast, water…)"></textarea>
+<textarea id="bo" class="full" rows="2" placeholder="Process &amp; tasting notes"></textarea>
+</div><button class="btn" id="addBeer">Save beer</button></details></div>
+<div id="beerList"></div>
+</section>
+
+<section id="sched" class="hide">
+<div class="card"><div class="mute" style="margin-bottom:8px">Propose a time, then everyone taps “I’m free”.</div>
+<div class="row"><input id="sd" type="date" style="flex:2" aria-label="Date"><input id="st" type="time" value="14:00" style="flex:1" aria-label="Time"></div>
+<div class="row" style="margin-top:8px"><input id="sn" placeholder="Note (what we’re brewing?)" style="flex:1"><button class="btn" id="addSlot">Add</button></div></div>
+<div id="slotList"></div>
+</section>
+
+<div class="row" style="margin-top:16px"><button class="ghost" id="invite">Copy invite link</button><button class="ghost" id="switch">Not me? Switch name</button></div>
+</div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+var state={beers:[],slots:[]},db=null,me="",cfg=null,SIZE=4;
+var STATUS=["Fermenting","Conditioning","Ready","Finished"];
+function lsGet(k){try{return localStorage.getItem("bc_"+k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem("bc_"+k,v)}catch(e){}}
+function esc(s){var d=document.createElement("div");d.textContent=s==null?"":String(s);return d.innerHTML}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
+function fmtDate(d,t){if(!d)return "";var x=new Date(d+"T"+(t||"12:00"));var s=x.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});if(t)s+=" · "+x.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"});return s}
+function show(id){["setup","who","app"].forEach(function(k){$(k).classList.toggle("hide",k!==id)})}
+
+/* ---- config: from invite link (#cfg=) or saved, else setup screen ---- */
+var m=location.hash.match(/cfg=([^&]+)/);
+if(m){try{lsSet("cfg",atob(decodeURIComponent(m[1])));history.replaceState(null,"",location.pathname+location.search)}catch(e){}}
+try{cfg=JSON.parse(lsGet("cfg"))}catch(e){cfg=null}
+
+$("cfgSave").onclick=function(){var t=$("cfgText").value,c={};
+["apiKey","authDomain","projectId","storageBucket","messagingSenderId","appId"].forEach(function(k){var r=new RegExp(k+"\\s*[\"']?\\s*:\\s*[\"']([^\"']+)[\"']").exec(t);if(r)c[k]=r[1]});
+if(!c.projectId||!c.apiKey){$("cfgErr").textContent="Couldn’t find apiKey and projectId in that text.";return}
+lsSet("cfg",JSON.stringify(c));location.reload()};
+
+$("nameSave").onclick=function(){var n=$("nameIn").value.replace(/[.\/#\[\]$]/g,"").trim().slice(0,20);if(!n){$("nameIn").focus();return}lsSet("name",n);me=n;start()};
+$("switch").onclick=function(){lsSet("name","");location.reload()};
+$("invite").onclick=function(){var u=location.origin+location.pathname+"#cfg="+encodeURIComponent(btoa(JSON.stringify(cfg)));
+if(navigator.clipboard)navigator.clipboard.writeText(u).then(function(){$("msg").textContent="Invite link copied — send it to your friends."},function(){prompt("Copy this link:",u)});else prompt("Copy this link:",u)};
+
+function tab(n){$("beers").classList.toggle("hide",n!==1);$("sched").classList.toggle("hide",n!==2);$("t1").classList.toggle("on",n===1);$("t2").classList.toggle("on",n===2)}
+$("t1").onclick=function(){tab(1)};$("t2").onclick=function(){tab(2)};
+
+function save(col,id,data){return db.collection(col).doc(id).set(data).catch(function(e){$("msg").textContent="Couldn’t save: "+(e&&e.message||"check your Firestore rules")})}
+function del(col,id){db.collection(col).doc(id).delete().catch(function(){})}
+function nm(id){return id===me?"You":id}
+
+function calcAbv(x){var o=parseFloat(x.og),f=parseFloat(x.fg);return o&&f&&o>f?((o-f)*131.25).toFixed(1):""}
+function timer(x){if(!x.date||!+x.days||x.status==="Finished")return "";var s=new Date(x.date+"T12:00"),d=Math.floor((new Date()-s)/864e5),left=+x.days-d,pct=Math.max(0,Math.min(100,Math.round(d/+x.days*100)));
+var txt=d<0?"Starts "+fmtDate(x.date):left>0?"Day "+d+" of "+x.days+" · "+left+" day"+(left===1?"":"s")+" left":"Fermentation done — time to check gravity and package";
+return '<div class="bar"><i style="width:'+pct+'%"></i></div><div class="mute">⏱ '+txt+'</div>'}
+
+function renderBeers(){
+var b=state.beers.slice().sort(function(a,c){return (c.date||"").localeCompare(a.date||"")});
+if(!b.length){$("beerList").innerHTML='<div class="card mute">No beers yet — add your first one above.</div>';return}
+$("beerList").innerHTML=b.map(function(x){
+var rt=x.ratings||{},mr=rt[me]||0,ids=Object.keys(rt).filter(function(k){return rt[k]>0}),avg=ids.length?(ids.reduce(function(s,k){return s+rt[k]},0)/ids.length).toFixed(1):"",stars="";
+for(var i=1;i<=5;i++)stars+='<button data-r="'+i+'" data-id="'+x.id+'" class="'+(i<=mr?"on":"")+'" aria-label="'+i+' stars">★</button>';
+var who=ids.map(function(k){return esc(nm(k))+" "+rt[k]+"★"}).join(" · "),tm=timer(x),abv=x.abv||calcAbv(x);
+var opts=STATUS.map(function(s){return "<option"+(s===x.status?" selected":"")+">"+s+"</option>"}).join("");
+return '<div class="card"><div class="row between"><strong>'+esc(x.name)+'</strong><span class="pill">'+(abv?esc(abv)+"% ABV":"ABV —")+'</span></div>'+
+'<div class="mute">'+esc(x.style||"Style —")+(x.date?" · brewed "+fmtDate(x.date):"")+'</div>'+
+tm+((x.ingr||x.notes||x.og)?'<details><summary>Recipe</summary>'+(x.og?'<div class="mute">OG '+esc(x.og)+(x.fg?' → FG '+esc(x.fg):"")+'</div>':"")+(x.ingr?'<div style="white-space:pre-wrap;margin:4px 0"><strong>Ingredients</strong><br>'+esc(x.ingr)+'</div>':"")+(x.notes?'<div style="white-space:pre-wrap;margin:4px 0"><strong>Process &amp; notes</strong><br>'+esc(x.notes)+'</div>':"")+'</details>':"")+
+'<div class="row between" style="margin-top:6px"><div class="stars">'+stars+(avg?' <span class="mute">avg '+avg+'</span>':"")+'</div><select data-st="'+x.id+'" style="width:auto">'+opts+'</select></div>'+(who?'<div class="mute">'+who+'</div>':"")+
+'<div style="text-align:right;margin-top:6px"><button class="ghost" data-del="'+x.id+'">Remove</button></div></div>'}).join("")}
+
+$("beerList").addEventListener("click",function(e){var t=e.target;
+if(t.dataset.r){var b=state.beers.find(function(x){return x.id===t.dataset.id});if(b){var r=+t.dataset.r,rt=Object.assign({},b.ratings||{});if(rt[me]===r)delete rt[me];else rt[me]=r;save("beers",b.id,Object.assign({},b,{ratings:rt}))}}
+if(t.dataset.del&&confirm("Remove this beer?"))del("beers",t.dataset.del)});
+$("beerList").addEventListener("change",function(e){var id=e.target.dataset.st;if(!id)return;var b=state.beers.find(function(x){return x.id===id});if(b)save("beers",id,Object.assign({},b,{status:e.target.value}))});
+
+$("addBeer").onclick=function(){var n=$("bn").value.trim();if(!n){$("bn").focus();return}
+var id=uid();save("beers",id,{id:id,name:n,style:$("bs").value.trim(),date:$("bd").value,abv:$("ba").value,status:$("bt").value,notes:$("bo").value.trim(),ingr:$("bi").value.trim(),days:$("bf").value,og:$("og").value,fg:$("fg").value,ratings:{},created:Date.now()});
+["bn","bs","bd","ba","bo","bi","bf","og","fg"].forEach(function(k){$(k).value=""});$("addBeer").closest("details").open=false};
+
+function renderSlots(){
+var s=state.slots.slice().sort(function(a,c){return (a.date+a.time).localeCompare(c.date+c.time)});
+if(!s.length){$("slotList").innerHTML='<div class="card mute">No brew days proposed yet.</div>';return}
+var max=Math.max.apply(null,s.map(function(x){return (x.yes||[]).length}));
+$("slotList").innerHTML=s.map(function(x){var yes=x.yes||[],mine=yes.indexOf(me)>-1,best=max>0&&yes.length===max;
+return '<div class="card"><div class="row between"><strong>'+esc(fmtDate(x.date,x.time))+'</strong><span class="pill '+(best?"best":"")+'">'+yes.length+"/"+SIZE+" free"+(best&&yes.length>=SIZE?" ✓ everyone":best?" · top pick":"")+'</span></div>'+
+(x.note?'<div class="mute">'+esc(x.note)+'</div>':"")+
+'<div class="mute" style="margin:6px 0">'+(yes.length?yes.map(function(i){return esc(nm(i))}).join(", "):"Nobody yet")+'</div>'+
+'<div class="row between"><button class="btn '+(mine?"yes":"")+'" data-tog="'+x.id+'">'+(mine?"✓ I’m free":"I’m free")+'</button><button class="ghost" data-sdel="'+x.id+'">Remove</button></div></div>'}).join("")}
+
+$("slotList").addEventListener("click",function(e){var t=e.target;
+if(t.dataset.tog){var s=state.slots.find(function(x){return x.id===t.dataset.tog});if(!s)return;var y=(s.yes||[]).slice(),i=y.indexOf(me);if(i>-1)y.splice(i,1);else y.push(me);save("slots",s.id,Object.assign({},s,{yes:y}))}
+if(t.dataset.sdel&&confirm("Remove this time?"))del("slots",t.dataset.sdel)});
+$("addSlot").onclick=function(){var d=$("sd").value;if(!d){$("sd").focus();return}
+var id=uid();save("slots",id,{id:id,date:d,time:$("st").value,note:$("sn").value.trim(),yes:[me]});$("sn").value="";$("sd").value=""};
+
+function start(){
+show("app");renderBeers();renderSlots();
+if(!window.firebase){$("msg").textContent="Couldn’t load Firebase — check your connection.";return}
+try{firebase.initializeApp(cfg);db=firebase.firestore()}catch(e){$("msg").textContent="Couldn’t connect: "+e.message;return}
+$("msg").textContent="Loading…";
+function sub(col,key,fn){db.collection(col).onSnapshot(function(q){$("msg").textContent="";state[key]=q.docs.map(function(d){return d.data()});fn()},function(e){$("msg").textContent="Couldn’t load data ("+(e.code||"error")+"). Check your Firestore rules."})}
+sub("beers","beers",renderBeers);sub("slots","slots",renderSlots)}
+
+if(!cfg||!cfg.projectId)show("setup");
+else{me=lsGet("name")||"";if(me)start();else show("who")}
+})();
+</script>
+</body>
+</html>
