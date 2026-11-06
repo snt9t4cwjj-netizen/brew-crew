@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bottling Day Checklist</title>
+<style>
+:root{--bg:#eef2ec;--ink:#1d2a22;--muted:#58675d;--green:#2f5d46;--amber:#d08a1e;--line:#c9d3c8;--card:#f8faf6}
+@media(prefers-color-scheme:dark){:root{--bg:#161d18;--ink:#e6ede6;--muted:#9fb0a4;--green:#6fb58f;--amber:#e3a23a;--line:#2c3a31;--card:#1d2620}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 Georgia,"Times New Roman",serif}
+main{max-width:680px;margin:0 auto;padding:24px 16px 64px}
+h1{font:700 30px/1.15 "Avenir Next","Segoe UI",system-ui,sans-serif;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 18px}
+.bar{position:sticky;top:0;background:var(--bg);padding:10px 0;z-index:5}
+.track{height:10px;background:var(--line);border-radius:6px;overflow:hidden}
+.fill{height:100%;width:0;background:var(--green);transition:width .25s}
+.count{font:600 14px "Avenir Next","Segoe UI",system-ui,sans-serif;color:var(--muted);margin-top:4px}
+section{margin:26px 0}
+h2{font:700 19px "Avenir Next","Segoe UI",system-ui,sans-serif;margin:0 0 8px;padding-bottom:6px;border-bottom:2px solid var(--green)}
+label.item{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;margin:6px 0;background:var(--card);border:1px solid var(--line);border-radius:8px;cursor:pointer}
+label.item input{width:22px;height:22px;margin-top:2px;accent-color:var(--green);flex:none}
+label.item:has(input:checked) span{text-decoration:line-through;color:var(--muted)}
+small{display:block;color:var(--muted);font-size:14px}
+.bottles{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:10px 0}
+.bottles button{aspect-ratio:1/1.6;border:2px solid var(--green);background:transparent;border-radius:8px 8px 4px 4px;color:var(--ink);font:600 12px system-ui,sans-serif;cursor:pointer;padding:0}
+.bottles button[aria-pressed=true]{background:var(--amber);border-color:var(--amber);color:#1d2a22}
+button:focus-visible,input:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.reset{margin-top:28px;font:600 15px system-ui,sans-serif;padding:10px 16px;border:2px solid var(--green);background:transparent;color:var(--ink);border-radius:8px;cursor:pointer}
+.note{border-left:4px solid var(--amber);padding:6px 12px;margin:10px 0;background:var(--card)}
+</style>
+</head>
+<body>
+<main>
+<h1>Bottling Day Checklist</h1>
+<p class="sub">24 bottles (12 oz) &middot; about 2.25 gallons of beer &middot; tap to check off</p>
+<div class="bar"><div class="track"><div class="fill" id="fill"></div></div><div class="count" id="count">0 of 0 done</div></div>
+<div id="app"></div>
+<button class="reset" id="reset">Reset checklist</button>
+</main>
+<script>
+var S=[
+{t:"Before you start",i:[
+["Hydrometer reading is the same 2-3 days in a row","Fermentation must be finished or bottles can burst."],
+["24 pry-off bottles, no chips or cracks"],
+["24 new caps and a capper"],
+["Bottling bucket with spigot, siphon, tubing, pot, measuring cup"],
+["Sugar ready: 2 oz corn sugar, or about 1.75 oz (1/4 cup) table sugar"],
+["Bottles washed with hot water and a bottle brush, no residue"]]},
+{t:"Sanitize",i:[
+["Bottles in a cold oven, heat to 350\u00b0F","Hold 30-45 minutes once it reaches temperature."],
+["Oven off, bottles cool inside, openings covered with foil"],
+["Caps, tubing, and small tools boiled 5-10 minutes, kept in the covered pot"],
+["Bucket, siphon, and spoon soaked 10-15 minutes in 1 tbsp unscented bleach per gallon","Never mix bleach with vinegar or other cleaners."],
+["Bleach-soaked gear rinsed thoroughly with clean water"]]},
+{t:"Prime",i:[
+["Sugar and 1 cup water boiled for 5 minutes","Only the sugar water gets boiled, never the beer."],
+["Sugar solution covered and cooled to room temperature"],
+["Cooled solution poured into the sanitized bottling bucket"]]},
+{t:"Transfer the beer",i:[
+["Siphon started, tube end kept below the liquid to avoid splashing"],
+["About 2.25 gallons moved into the bucket, sediment left in the carboy"],
+["Beer and sugar gently mixed, no air whipped in"]]},
+{t:"Fill and cap",i:[
+["Filling line set up: one fills, one caps, one passes bottles, one cleans up"],
+["Each bottle filled to about 1 inch from the top"],
+["Each bottle capped right after filling"],
+["Crimps checked for tightness"]],bottles:true},
+{t:"Condition and drink",i:[
+["Bottles stored at 68-72\u00b0F, out of light","Leave them for 2 weeks."],
+["Date and beer name labeled on the bottles or caps"],
+["Test bottle checked (plastic soda bottle should feel firm)"],
+["Chilled for 1-2 days, poured carefully to leave sediment behind"]]},
+{t:"Leftover beer (about 2.25 gallons)",i:[
+["Decided: find 24 more bottles and prime the full batch (about 4 oz sugar total), or"],
+["Siphoned into a sanitized jug, refrigerated, and drink it flat within a few days"]]}
+];
+var KEY="bottling-checklist-v1",st={};
+try{st=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){st={}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}}
+var app=document.getElementById("app"),total=0;
+S.forEach(function(s,si){
+var sec=document.createElement("section"),h=document.createElement("h2");h.textContent=s.t;sec.appendChild(h);
+s.i.forEach(function(it,ii){
+var id="c"+si+"_"+ii,l=document.createElement("label");l.className="item";
+var cb=document.createElement("input");cb.type="checkbox";cb.checked=!!st[id];
+cb.onchange=function(){st[id]=cb.checked;save();upd()};
+var sp=document.createElement("span");sp.textContent=it[0];
+if(it[1]){var sm=document.createElement("small");sm.textContent=it[1];sp.appendChild(sm)}
+l.appendChild(cb);l.appendChild(sp);sec.appendChild(l);total++;cb.dataset.k=id});
+if(s.bottles){
+var p=document.createElement("p");p.textContent="Tap each bottle as it is filled and capped:";p.style.margin="12px 0 0";sec.appendChild(p);
+var g=document.createElement("div");g.className="bottles";
+for(var b=1;b<=24;b++){(function(b){var id="b"+b,bt=document.createElement("button");bt.textContent=b;
+bt.setAttribute("aria-label","Bottle "+b+" filled and capped");bt.setAttribute("aria-pressed",!!st[id]);
+bt.onclick=function(){st[id]=!st[id];bt.setAttribute("aria-pressed",!!st[id]);save();upd()};
+g.appendChild(bt)})(b)}
+sec.appendChild(g);total+=24}
+app.appendChild(sec)});
+function upd(){var d=0;for(var k in st){if(st[k])d++}
+document.getElementById("fill").style.width=(total?d/total*100:0)+"%";
+document.getElementById("count").textContent=d+" of "+total+" done"}
+document.getElementById("reset").onclick=function(){
+if(!confirm("Clear every check mark?"))return;st={};save();
+document.querySelectorAll("input[type=checkbox]").forEach(function(c){c.checked=false});
+document.querySelectorAll(".bottles button").forEach(function(b){b.setAttribute("aria-pressed","false")});upd()};
+upd();
+</script>
+</body>
+</html>
